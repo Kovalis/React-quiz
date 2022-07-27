@@ -5,6 +5,8 @@ import FinishedQuiz from "../../components/FinishedQuiz/FinishedQuiz";
 import Loader from "../../components/UI/Loader/Loader";
 import { useParams } from "react-router-dom";
 import axios from "../../axios/axios-quiz";
+import { connect } from "react-redux";
+import { fetchQuizById } from "../../store/actions/quiz";
 
 function withRouter(Children) {
   return (props) => {
@@ -14,39 +16,6 @@ function withRouter(Children) {
 }
 
 class Quiz extends Component {
-  state = {
-    results: {}, // {[id]: success error}
-    isFinished: false,
-    activeQuestion: 0,
-    answerState: null, // { [id]: 'success' 'error' }
-    // quiz: [
-    //   {
-    //     question: "Какого цвета небо?",
-    //     rightAnswerId: 2,
-    //     id: 1,
-    //     answers: [
-    //       { text: "Черный", id: 1 },
-    //       { text: "Синий", id: 2 },
-    //       { text: "Красный", id: 3 },
-    //       { text: "Зеленый", id: 4 },
-    //     ],
-    //   },
-    //   {
-    //     question: "В каком году основали Санкт-Петербург?",
-    //     rightAnswerId: 3,
-    //     id: 2,
-    //     answers: [
-    //       { text: "1700", id: 1 },
-    //       { text: "1702", id: 2 },
-    //       { text: "1703", id: 3 },
-    //       { text: "1803", id: 4 },
-    //     ],
-    //   },
-    // ],
-    quiz: [],
-    loading: true,
-  };
-
   onAnswerClickHandler = (answerId) => {
     if (this.state.answerState) {
       const key = Object.keys(this.state.answerState)[0];
@@ -105,22 +74,8 @@ class Quiz extends Component {
     });
   };
 
-  async componentDidMount() {
-    console.log(this.props.match.params.id);
-    try {
-      const response = await axios.get(
-        `/quizes/${this.props.match.params.id}.json`
-      );
-      //console.log(response);
-      const quiz = response.data;
-
-      this.setState({
-        quiz,
-        loading: false,
-      });
-    } catch (e) {
-      console.log(e);
-    }
+  componentDidMount() {
+    this.props.fetchQuizById(this.props.match.params.id);
   }
 
   render() {
@@ -129,22 +84,22 @@ class Quiz extends Component {
         <div className={classes.QuizWrapper}>
           <h1>Ответьте на все вопросы</h1>
 
-          {this.state.loading ? (
+          {this.props.loading || !this.props.quiz ? (
             <Loader />
-          ) : this.state.isFinished ? (
+          ) : this.props.isFinished ? (
             <FinishedQuiz
-              results={this.state.results}
-              quiz={this.state.quiz}
+              results={this.props.results}
+              quiz={this.props.quiz}
               onRetry={this.retryHandler}
             />
           ) : (
             <ActiveQuiz
-              answers={this.state.quiz[this.state.activeQuestion].answers}
-              question={this.state.quiz[this.state.activeQuestion].question}
+              answers={this.props.quiz[this.props.activeQuestion].answers}
+              question={this.props.quiz[this.props.activeQuestion].question}
               onAnswerClick={this.onAnswerClickHandler}
-              quizLength={this.state.quiz.length}
-              answerNumber={this.state.activeQuestion + 1}
-              state={this.state.answerState}
+              quizLength={this.props.quiz.length}
+              answerNumber={this.props.activeQuestion + 1}
+              state={this.props.answerState}
             />
           )}
         </div>
@@ -153,5 +108,22 @@ class Quiz extends Component {
   }
 }
 
+function mapStateToProps(state) {
+  return {
+    results: state.quiz.results,
+    isFinished: state.quiz.isFinished,
+    activeQuestion: state.quiz.activeQuestion,
+    answerState: state.quiz.answerState,
+    quiz: state.quiz.quiz,
+    loading: state.quiz.loading,
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchQuizById: (id) => dispatch(fetchQuizById(id)),
+  };
+}
 //export default Quiz;
-export default withRouter(Quiz);
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Quiz));
+//export default withRouter(Quiz);
