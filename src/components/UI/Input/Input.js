@@ -1,34 +1,36 @@
-import React from "react";
-import classes from "./Input.module.css";
+import React from 'react'
+import classes from './Input.css'
 
-function isValid({ valid, touched, shouldValidate }) {
-  return !valid && shouldValidate && touched;
+function isInvalid({valid, touched, shouldValidate}) {
+  return !valid && shouldValidate && touched
 }
 
-const Input = (props) => {
-  const inputType = props.type || "text";
-  const cls = [classes.Input];
-  const htmlFor = `${inputType}-${Math.random()}`;
+const Input = props => {
+  const inputType = props.type || 'text'
+  const cls = [classes.Input]
+  const htmlFor = `${inputType}-${Math.random()}`
 
-  if (isValid(props)) {
-    cls.push(classes.invalid);
+  if (isInvalid(props)) {
+    cls.push(classes.invalid)
   }
 
   return (
-    <div className={cls.join(" ")}>
+    <div className={cls.join(' ')}>
       <label htmlFor={htmlFor}>{props.label}</label>
       <input
-        id={htmlFor}
         type={inputType}
+        id={htmlFor}
         value={props.value}
         onChange={props.onChange}
       />
 
-      {isValid(props) ? (
-        <span>{props.errorMassage || "Введите верное значение"}</span>
-      ) : null}
+      {
+        isInvalid(props)
+          ? <span>{props.errorMessage || 'Введите верное значение'}</span>
+          : null
+      }
     </div>
-  );
-};
+  )
+}
 
-export default Input;
+export default Input
